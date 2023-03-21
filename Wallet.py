@@ -8,6 +8,7 @@ intents = discord.Intents.all()
 client = commands.Bot(command_prefix='.', intents=intents)
 channel_id=1087340845700763712
 wallet = 'bc1q96y38ev7uvhmrvapgnl9q95gfr99nnxyldeglg' #btc
+token = 'MTA4NzMzNTMwODIxNzAyNDUzMw.G06GkU.-thUHr12PbYJMNUH2EDEdR2JkMV9Q8Z7M2pp8Q'
 api=f"https://api.blockcypher.com/v1/btc/main/addrs/{wallet}"
 usd_api='https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd'
 
@@ -63,4 +64,4 @@ async def on_ready():
     print("I'm Up.")
     check_trnscs.start()
 
-client.run(os.environ.get('DISCORD_TOKEN'))
+client.run(token)
