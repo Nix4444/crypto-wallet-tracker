@@ -9,8 +9,9 @@ client = commands.Bot(command_prefix='.', intents=intents)
 channel_id=1087340845700763712
 wallet = 'bc1q96y38ev7uvhmrvapgnl9q95gfr99nnxyldeglg' #btc
 token = 'MTA4NzMzNTMwODIxNzAyNDUzMw.G06GkU.-thUHr12PbYJMNUH2EDEdR2JkMV9Q8Z7M2pp8Q'
-api=f"https://api.blockcypher.com/v1/btc/main/addrs/{wallet}"
+api=f"https://blockchain.info/rawaddr/{wallet}"
 usd_api='https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd'
+api_token='d0c92a0487f24892a58054c8954d675e'#blockcypher
 
 
 def fetch_wallet_bal():
@@ -27,20 +28,35 @@ def update_usd():
     usd_final =  data['bitcoin']['usd']
     return usd_final
     
-@tasks.loop(seconds=60)
+@tasks.loop(seconds=90)
 async def check_trnscs():
     response = requests.get(api)
     data = json.loads(response.text)
-    current_balance = fetch_wallet_bal()
-    finalp= current_balance * 0.00000001* update_usd()
-    finalpr = round(finalp,2)
-    for tx in data["txrefs"]:
-        if tx["tx_output_n"] is None:
-            if tx["value"] > 0:
-                await send_notification(f"Received {tx['value'] * 0.00000001} BTC = ${finalpr}")
-        else:
-            if tx["value"]<0:
-                await send_notification(f"Sent {tx['value'] * 0.00000001} BTC = ${finalpr} ")
+    transactions = data['txs']
+
+    for transaction in transactions:
+        tx_hash = transaction['hash']
+        outgoing = False
+        for output in transactions['out']:
+            if output['addr'] == wallet:
+                outgoing = True
+                break
+            if outgoing:
+                message = f"📤 Outgoing transaction: https://www.blockchain.com/btc/tx/{tx_hash}"
+            else:
+                message = f"📤 Incoming transaction: https://www.blockchain.com/btc/tx/{tx_hash}"
+    
+    await send_notification(message)
+
+    
+
+    
+    
+        
+            
+        
+
+
     
 async def send_notification(message):
     channel = client.get_channel(channel_id)
