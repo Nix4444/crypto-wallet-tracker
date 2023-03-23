@@ -17,7 +17,7 @@ txlink = "https://www.blockchain.com/btc/tx/{new_hash}"
 old_hash =''
 
 def fetch_wallet_bal():
-    response = requests.get(api)
+    response = requests.get(addy_info_api)
     data = json.loads(response.text)
     return data["balance"]
 
@@ -77,12 +77,15 @@ async def bal(ctx):
 
 @client.command()
 async def price(ctx):
-    await ctx.send(update_usd())
+    msg = f"1 BTC = ${update_usd()}"
+    await send_notification(msg)
 
 
 @client.event
 async def on_ready():
     print("I'm Up.")
     check_trnscs.start()
+    pr = update_usd()
+    client.change_presence(activity=discord.activity(type=discord.ActivityType.watching, name="test"))
 
 client.run(token)
