@@ -1,0 +1,6 @@
+os
+discord
+requests
+python-dotenv
+json
+discord.ext
