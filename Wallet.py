@@ -13,7 +13,7 @@ api=f"https://blockchain.info/rawaddr/{wallet}"
 addy_info_api=f"https://api.blockcypher.com/v1/btc/main/addrs/{wallet}"
 usd_api='https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD&api_key={321940b1c8bf5b47d9d121abebceac2f25f0d102c630d559c47e02fc455aed0f}'
 api_token='d0c92a0487f24892a58054c8954d675e'#blockcypher
-txlink = "https://www.blockchain.com/btc/tx/{new_hash}"
+
 
 
 def fetch_wallet_bal():
@@ -79,7 +79,7 @@ async def check_trnscs():
             usd_rate = update_usd()
             finalp = usd_rate * btcvalue
             finalp = round(finalp,2)
-            msg = f"📤 Sent {btcvalue} {btc_emoji}: ${finalp}\n Check Confirmations here: https://www.blockchain.com/btc/tx/{n}"
+            msg = f"📤 Sent {btcvalue} {btc_emoji}: ${finalp}\n Check Confirmations here: https://blockchair.com/bitcoin/transaction/{n}"
             update_oldhash(new_hash)
             await send_notification(msg)
 
@@ -88,7 +88,7 @@ async def check_trnscs():
             usd_rate = update_usd()
             finalp = usd_rate * btcvalue
             finalp = round(finalp,2)
-            msg = f"📥 Received {btcvalue} {btc_emoji}: ${finalp}\n Check Confirmations here: https://www.blockchain.com/btc/tx/{n}"
+            msg = f"📥 Received {btcvalue} {btc_emoji}: ${finalp}\n Check Confirmations here: https://blockchair.com/bitcoin/transaction/{n}"
             update_oldhash(new_hash)
             await send_notification(msg)
     else:
