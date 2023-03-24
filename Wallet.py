@@ -11,10 +11,10 @@ wallet = 'bc1q96y38ev7uvhmrvapgnl9q95gfr99nnxyldeglg' #btc
 token = 'MTA4NzMzNTMwODIxNzAyNDUzMw.G06GkU.-thUHr12PbYJMNUH2EDEdR2JkMV9Q8Z7M2pp8Q'
 api=f"https://blockchain.info/rawaddr/{wallet}"
 addy_info_api=f"https://api.blockcypher.com/v1/btc/main/addrs/{wallet}"
-usd_api='https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd'
+usd_api='https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD&api_key={321940b1c8bf5b47d9d121abebceac2f25f0d102c630d559c47e02fc455aed0f}'
 api_token='d0c92a0487f24892a58054c8954d675e'#blockcypher
 txlink = "https://www.blockchain.com/btc/tx/{new_hash}"
-old_hash =''
+
 
 def fetch_wallet_bal():
     response = requests.get(addy_info_api)
@@ -26,7 +26,7 @@ def fetch_wallet_bal():
 def update_usd():
     response = requests.get(usd_api)
     data = json.loads(response.text)
-    usd_final =  data['bitcoin']['usd']
+    usd_final =  data['USD']
     return usd_final
     
 
@@ -35,6 +35,30 @@ def update_oldhash(newh):
     oldh = newh
     
 update_oldhash('994c7b79b4e3e207c197607e7c8caea37cb9a324d6471e484c033e32877e8828')
+
+def get_received_btc(newh):
+    response = requests.get(addy_info_api)
+    data = json.loads(response.text)
+    data = data['txrefs'][0]
+    txhash = data.get('tx_hash')
+    if txhash == newh:
+        values = data.get('value')
+        btcnum = 0.00000001 * values
+        return btcnum
+
+def sent_btc():
+    response = requests.get(api)
+    data = json.loads(response.text)
+    data = data['txs'][0]
+    out = data.get('out')
+    value = out[1].get('value')
+    return value
+
+    
+
+
+
+
 
 @tasks.loop(seconds=90)
 async def check_trnscs():
@@ -47,18 +71,34 @@ async def check_trnscs():
     inputs_list = input1.get('inputs')
     prevout = inputs_list[0].get('prev_out')
     tx_addy = prevout.get('addr')
+    btc_emoji = discord.utils.get(client.emojis, name='BTC')
     
     if new_hash != oldh:
         if tx_addy == wallet:
-            msg = f"Outgoing Transaction Detected!📤\n Check Confirmations here: https://www.blockchain.com/btc/tx/{n}"
+            btcvalue = sent_btc() * 0.00000001
+            usd_rate = update_usd()
+            finalp = usd_rate * btcvalue
+            finalp = round(finalp,2)
+            msg = f"📤 Sent {btcvalue} {btc_emoji}: ${finalp}\n Check Confirmations here: https://www.blockchain.com/btc/tx/{n}"
             update_oldhash(new_hash)
+            await send_notification(msg)
 
         else:
-            msg = f"Incoming Transaction Detected!📤\n Check Confirmations here: https://www.blockchain.com/btc/tx/{n}"
+            btcvalue = get_received_btc(new_hash)
+            usd_rate = update_usd()
+            finalp = usd_rate * btcvalue
+            finalp = round(finalp,2)
+            msg = f"📥 Received {btcvalue} {btc_emoji}: ${finalp}\n Check Confirmations here: https://www.blockchain.com/btc/tx/{n}"
             update_oldhash(new_hash)
-    await send_notification(msg)
+            await send_notification(msg)
+    else:
+        return None
         
-
+@tasks.loop(seconds = 30)
+async def update_status():
+    pr = update_usd()
+    intpr = int(pr)
+    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name = f"BTC 💰: ${intpr}"))
 
 
     
@@ -71,21 +111,27 @@ async def send_notification(message):
 async def bal(ctx):
     current_balance = fetch_wallet_bal()
     finalp=current_balance * 0.00000001* update_usd()
-    finalpr = round(finalp,2)
-    await ctx.send(f"Current Balance: {current_balance * 0.00000001} BTC = ${finalpr}")
+    finalp = round(finalp,2)
+    btc_emoji = discord.utils.get(client.emojis, name='BTC')
+    await ctx.send(f"Current Balance: {current_balance * 0.00000001} {btc_emoji} = ${finalp}")
 
 
 @client.command()
 async def price(ctx):
-    msg = f"1 BTC = ${update_usd()}"
+    btc_emoji = discord.utils.get(client.emojis, name='BTC')
+    msg = f"{btc_emoji}: ${update_usd()}"
     await send_notification(msg)
+
+
+
 
 
 @client.event
 async def on_ready():
     print("I'm Up.")
     check_trnscs.start()
-    pr = update_usd()
-    client.change_presence(activity=discord.activity(type=discord.ActivityType.watching, name="test"))
+    update_status.start()
+    
+    
 
 client.run(token)
