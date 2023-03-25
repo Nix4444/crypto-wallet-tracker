@@ -1,4 +1,3 @@
-import os
 import discord
 import requests
 import json
@@ -13,6 +12,7 @@ api=f"https://blockchain.info/rawaddr/{wallet}"
 addy_info_api=f"https://api.blockcypher.com/v1/btc/main/addrs/{wallet}"
 usd_api='https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD&api_key={321940b1c8bf5b47d9d121abebceac2f25f0d102c630d559c47e02fc455aed0f}'
 api_token='d0c92a0487f24892a58054c8954d675e'#blockcypher
+
 
 
 
@@ -55,7 +55,7 @@ def sent_btc():
     return value
 
 
-'''
+
 @tasks.loop(seconds=90)
 async def check_trnscs():
     response = requests.get(api)
@@ -68,6 +68,10 @@ async def check_trnscs():
     prevout = inputs_list[0].get('prev_out')
     tx_addy = prevout.get('addr')
     btc_emoji = discord.utils.get(client.emojis, name='BTC')
+    usdt_emoji = discord.utils.get(client.emojis, name='USDT')
+    usd_emoji = discord.utils.get(client.emojis, name='USD')
+    
+    channel_id=1087340845700763712
     
     if new_hash != oldh:
         if tx_addy == wallet:
@@ -75,21 +79,33 @@ async def check_trnscs():
             usd_rate = update_usd()
             finalp = usd_rate * btcvalue
             finalp = round(finalp,2)
-            msg = f"📤 Sent {btcvalue} {btc_emoji}: ${finalp}\n Check Confirmations here: https://blockchair.com/bitcoin/transaction/{n}"
             update_oldhash(new_hash)
-            await send_notification(msg)
+
+            embed = discord.Embed(title="Money Sent Successfully!", color=0xff0000)
+            embed.set_author(name="BTC Sent!", url=f"https://blockchair.com/bitcoin/transaction/{n}", icon_url='https://cdn-icons-png.flaticon.com/512/5610/5610944.png')
+            embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/1888/1888486.png")
+            embed.add_field(name=f"{btc_emoji}BTC", value=btcvalue)
+            embed.add_field(name=f"{usd_emoji}Value", value=f"${finalp}", inline=True)
+            embed.add_field(name=f"{usdt_emoji}BTC Price", value=f"${usd_rate}", inline=True)
+            await client.get_channel(channel_id).send(embed=embed)
 
         else:
             btcvalue = get_received_btc(new_hash)
             usd_rate = update_usd()
             finalp = usd_rate * btcvalue
             finalp = round(finalp,2)
-            msg = f"📥 Received {btcvalue} {btc_emoji}: ${finalp}\n Check Confirmations here: https://blockchair.com/bitcoin/transaction/{n}"
             update_oldhash(new_hash)
-            await send_notification(msg)
+            embed = discord.Embed(title="Money Received Successfully!", color=0x46D117)
+            embed.set_author(name="BTC Received!", url=f"https://blockchair.com/bitcoin/transaction/{n}", icon_url='https://cdn-icons-png.flaticon.com/512/5610/5610944.png')
+            embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/1888/1888486.png")
+            embed.add_field(name=f"{btc_emoji}BTC", value=btcvalue)
+            embed.add_field(name=f"{usd_emoji}Value", value=f"${finalp}", inline=True)
+            embed.add_field(name=f"{usdt_emoji}BTC Price", value=f"${usd_rate}", inline=True)
+            await client.channel_id.send(embed=embed)
     else:
         return None
-'''
+
+
 @tasks.loop(seconds = 30)
 async def update_status():
     pr = update_usd()
@@ -105,30 +121,34 @@ async def send_notification(message):
 
 @client.command()
 async def bal(ctx):
-    current_balance = fetch_wallet_bal()
-    finalp=current_balance * 0.00000001* update_usd()
-    finalp = round(finalp,2)
-    btc_emoji = discord.utils.get(client.emojis, name='BTC')
-    await ctx.send(f"Current Balance: {current_balance * 0.00000001} {btc_emoji} = ${finalp}")
+            current_balance = fetch_wallet_bal()
+            usd_rate = update_usd()
+            finalp=current_balance * 0.00000001* usd_rate
+            finalp = round(finalp,2)
+            btc_emoji = discord.utils.get(client.emojis, name='BTC')
+            usdt_emoji = discord.utils.get(client.emojis, name='USDT')
+            usd_emoji = discord.utils.get(client.emojis, name='USD')
+            embed = discord.Embed(title="Current Balance💸", color=0x5217D1)
+            embed.set_author(name="Wallet Balance", url=f"https://blockchair.com/bitcoin/address/{wallet}", icon_url='https://cdn-icons-png.flaticon.com/512/3444/3444339.png')
+            embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/5341/5341431.png")
+            embed.add_field(name=f"{btc_emoji}BTC", value=current_balance * 0.00000001)
+            embed.add_field(name=f"{usd_emoji}Value", value=f"${finalp}", inline=True)
+            embed.add_field(name=f"{usdt_emoji}BTC Price", value=f"${usd_rate}", inline=True)
+    
+            await ctx.send(embed=embed)
 
 
 @client.command()
 async def price(ctx):
     btc_emoji = discord.utils.get(client.emojis, name='BTC')
-    msg = f"{btc_emoji}: ${update_usd()}"
-    await send_notification(msg)
+   
 
-
-@tasks.loop(seconds=5)
-async def embedtest(ctx):
-    embed = discord.Embed(title="Transaction Sent Succesfully!", color=0x00ff00)
-    embed.set_author(name="BTC Sent!", icon_url='https://cdn-icons-png.flaticon.com/512/5610/5610944.png')
-    embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/1888/1888486.png")
-    embed.add_field(name="BTC", value=f"btc")
-    embed.add_field(name="Value", value=f"value", inline=True)
-    embed.add_field(name="Price", value=f"usd", inline=True)
-    embed.set_footer(text="footer.")
+    embed = discord.Embed(title="Current Price",description=f"{btc_emoji}BTC: ${update_usd()} ",color=0x5217D1)
+    embed.set_author(name="BTC Market Price", url="https://blockchair.com/bitcoin", icon_url='https://cdn-icons-png.flaticon.com/512/3444/3444339.png')
+    embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/9214/9214823.png")
+    
     await ctx.send(embed=embed)
+
 
 
 
@@ -136,9 +156,9 @@ async def embedtest(ctx):
 @client.event
 async def on_ready():
     print("I'm Up.")
-   # check_trnscs.start()
+    check_trnscs.start()
     update_status.start()
-    embedtest.start()
+    
     
     
     
