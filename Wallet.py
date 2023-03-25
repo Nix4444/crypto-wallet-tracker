@@ -54,12 +54,8 @@ def sent_btc():
     value = out[1].get('value')
     return value
 
-    
 
-
-
-
-
+'''
 @tasks.loop(seconds=90)
 async def check_trnscs():
     response = requests.get(api)
@@ -93,7 +89,7 @@ async def check_trnscs():
             await send_notification(msg)
     else:
         return None
-        
+'''
 @tasks.loop(seconds = 30)
 async def update_status():
     pr = update_usd()
@@ -123,14 +119,28 @@ async def price(ctx):
     await send_notification(msg)
 
 
+@tasks.loop(seconds=5)
+async def embedtest(ctx):
+    embed = discord.Embed(title="Transaction Sent Succesfully!", color=0x00ff00)
+    embed.set_author(name="BTC Sent!", icon_url='https://cdn-icons-png.flaticon.com/512/5610/5610944.png')
+    embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/1888/1888486.png")
+    embed.add_field(name="BTC", value=f"btc")
+    embed.add_field(name="Value", value=f"value", inline=True)
+    embed.add_field(name="Price", value=f"usd", inline=True)
+    embed.set_footer(text="footer.")
+    await ctx.send(embed=embed)
+
 
 
 
 @client.event
 async def on_ready():
     print("I'm Up.")
-    check_trnscs.start()
+   # check_trnscs.start()
     update_status.start()
+    embedtest.start()
+    
+    
     
     
 
