@@ -1,7 +1,7 @@
 # Crypto Wallet Tracker 
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/Nix4444/crypto-wallet-tracker) ![GitHub issues](https://img.shields.io/github/issues-raw/Nix4444/crypto-wallet-tracker) 
-![GitHub views](https://img.shields.io/github/watchers/Nix4444/crypto-wallet-tracker?style=social) ![Python](https://img.shields.io/badge/python-3.x-green.svg)
+![Python](https://img.shields.io/badge/python-3.x-green.svg)
 
 
 The Crypto Wallet Transactions Tracker Bot is a Simple Discord bot designed to monitor and notify users of transaction activities across multiple cryptocurrency wallets. 
