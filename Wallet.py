@@ -7,7 +7,6 @@ with open('settings.txt', 'r') as file:
     lines = file.readlines()
     settings = {line.split('=')[0]: line.split('=')[1].strip() for line in lines}
 
-
 intents = discord.Intents.all()
 client = commands.Bot(command_prefix='.', intents=intents)
 
@@ -15,38 +14,40 @@ cryptocompare_apikey = settings['cryptocompare_apikey']
 btc_wallet = settings['btc_wallet']
 ltc_wallet = settings['ltc_wallet']
 token = settings['token']
-channel_id = settings['channel_id']
+channel_id = int(settings['channel_id'])
 
 api=f"https://blockchain.info/rawaddr/{btc_wallet}"
 btcaddy_info_api=f"https://api.blockcypher.com/v1/btc/main/addrs/{btc_wallet}"
 btc_price_api='https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD&api_key={cryptocompare_apikey}'
 test = f"https://blockstream.info/api/address/{btc_wallet}/txs"
 
-#LTC endpoints---
 ltc_txhistory_api = f"https://chainz.cryptoid.info/ltc/api.dws?key=1cb5722c643e&q=multiaddr&active={ltc_wallet}"
 ltchashinfo_api = "https://chainz.cryptoid.info/ltc/api.dws?q=txinfo&t="
 ltc_price_api ="https://min-api.cryptocompare.com/data/price?fsym=LTC&tsyms=USD&api_key={cryptocompare_apikey}"
-
 
 def fetch_btc_bal():
     response = requests.get(btcaddy_info_api)
     data = json.loads(response.text)
     return data["balance"]
+
 def fetch_ltc_bal():
     response = requests.get(ltc_txhistory_api)
     data = json.loads(response.text)
     bal = data["addresses"][0]["final_balance"]
     return bal
+
 def btcprice():
     response = requests.get(btc_price_api)
     data = json.loads(response.text)
     btcpr =  data['USD']
     return btcpr
+
 def ltcprice():
     response = requests.get(ltc_price_api)
     data = json.loads(response.text)
     ltcpr =  data['USD']
     return ltcpr
+
 def get_received_btc(newh):
     response = requests.get(btcaddy_info_api)
     data = json.loads(response.text)
@@ -59,73 +60,70 @@ def get_received_btc(newh):
 
 @tasks.loop(seconds=90)
 async def check_btc_trnscs():
-    
     response = requests.get(test)
     txs = response.json()
     btc_emoji = discord.utils.get(client.emojis, name='BTC')
     usdt_emoji = discord.utils.get(client.emojis, name='USDT')        
     usd_emoji = discord.utils.get(client.emojis, name='USD')
     
-    channel_id=1087340845700763712
     latest_tx = txs[0]["txid"]
     f = open("latestBTCtx.txt", "r")
     oldh = f.readline()
     f.close()
 
     if latest_tx != oldh:
+        inputs = txs[0]["vin"]
+        outputs = txs[0]["vout"]
+        address_input_value = 0
+        address_output_value = 0
+        for input in inputs:
+            if input["prevout"]["scriptpubkey_address"] == btc_wallet:
+                address_input_value += input["prevout"]["value"]
+        for output in outputs:
+            if output["scriptpubkey_address"] == btc_wallet:
+                address_output_value += output["value"]
+        if address_input_value > address_output_value:
+            direction = "sent"
+        else:
+            direction = "received"
+
+        if direction == "sent":
+            value = (address_input_value - address_output_value) * 0.00000001
+            value = round(value,10)
+            usd_rate = btcprice()
+            finalp = usd_rate * value
+            finalp = round(finalp,2)
+            embed = discord.Embed(title="Money Sent Successfully!", color=0xff0000)
+            embed.set_author(name="BTC Sent!", url=f"https://blockchair.com/bitcoin/transaction/{latest_tx}", icon_url='https://cdn-icons-png.flaticon.com/512/5610/5610944.png')
+            embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/1888/1888486.png")
+            embed.add_field(name=f"{btc_emoji}BTC", value=value)
+            embed.add_field(name=f"{usd_emoji}Value", value=f"${finalp}", inline=True)
+            embed.add_field(name=f"{usdt_emoji}BTC Price", value=f"${usd_rate}", inline=True)
+            f = open("latestBTCtx.txt", "w")
+            f.write(latest_tx)
+            f.close()
             
-            inputs = txs[0]["vin"]
-            outputs = txs[0]["vout"]
-            address_input_value = 0
-            address_output_value = 0
-            for input in inputs:
-                if input["prevout"]["scriptpubkey_address"] == btc_wallet:
-                    address_input_value += input["prevout"]["value"]
-            for output in outputs:
-                if output["scriptpubkey_address"] == btc_wallet:
-                    address_output_value += output["value"]
-            if address_input_value > address_output_value:
-                direction = "sent"
-            else:
-                direction = "received"
+            await client.get_channel(channel_id).send(embed=embed)
+        else:
+            value = (address_output_value - address_input_value) * 0.00000001
+            value = round(value,10)
+            usd_rate = btcprice()
+            finalp = usd_rate * value 
+            finalp = round(finalp,2)
+            embed = discord.Embed(title="Money Received Successfully!", color=0x46D117)
+            embed.set_author(name="BTC Received!", url=f"https://blockchair.com/bitcoin/transaction/{latest_tx}", icon_url='https://cdn-icons-png.flaticon.com/512/5610/5610944.png')
+            embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/1888/1888486.png")
+            embed.add_field(name=f"{btc_emoji}BTC", value=value)
+            embed.add_field(name=f"{usd_emoji}Value", value=f"${finalp}", inline=True)
+            embed.add_field(name=f"{usdt_emoji}BTC Price", value=f"${usd_rate}", inline=True)
+            f = open("latestBTCtx.txt", "w")
+            f.write(latest_tx)
+            f.close()
             
-            if direction == "sent":
-                value = (address_input_value - address_output_value) * 0.00000001
-                value = round(value,10)
-                usd_rate = btcprice()
-                finalp = usd_rate * value
-                finalp = round(finalp,2)
-                embed = discord.Embed(title="Money Sent Successfully!", color=0xff0000)
-                embed.set_author(name="BTC Sent!", url=f"https://blockchair.com/bitcoin/transaction/{latest_tx}", icon_url='https://cdn-icons-png.flaticon.com/512/5610/5610944.png')
-                embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/1888/1888486.png")
-                embed.add_field(name=f"{btc_emoji}BTC", value=value)
-                embed.add_field(name=f"{usd_emoji}Value", value=f"${finalp}", inline=True)
-                embed.add_field(name=f"{usdt_emoji}BTC Price", value=f"${usd_rate}", inline=True)
-                f = open("latestBTCtx.txt", "w")
-                f.write(latest_tx)
-                f.close()
-                
-                await client.get_channel(channel_id).send(embed=embed)
-            else:
-                value = (address_output_value - address_input_value) * 0.00000001
-                value = round(value,10)
-                usd_rate = btcprice()
-                finalp = usd_rate * value 
-                finalp = round(finalp,2)
-                embed = discord.Embed(title="Money Received Successfully!", color=0x46D117)
-                embed.set_author(name="BTC Received!", url=f"https://blockchair.com/bitcoin/transaction/{latest_tx}", icon_url='https://cdn-icons-png.flaticon.com/512/5610/5610944.png')
-                embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/1888/1888486.png")
-                embed.add_field(name=f"{btc_emoji}BTC", value=value)
-                embed.add_field(name=f"{usd_emoji}Value", value=f"${finalp}", inline=True)
-                embed.add_field(name=f"{usdt_emoji}BTC Price", value=f"${usd_rate}", inline=True)
-                f = open("latestBTCtx.txt", "w")
-                f.write(latest_tx)
-                f.close()
-                
-                await client.get_channel(channel_id).send(embed=embed)
+            await client.get_channel(channel_id).send(embed=embed)
+
 @tasks.loop(seconds=90)
 async def check_ltc_trnscs():
-    channel_id = 1087340845700763712
     response = requests.get(ltc_txhistory_api)
     data = json.loads(response.text)
     newtx = data['txs'][0]['hash']
@@ -184,9 +182,6 @@ async def check_ltc_trnscs():
                 f.close()
                 await client.get_channel(channel_id).send(embed=embed)
 
-    
-
-
 @client.command()
 async def bal(ctx,coin):
     if coin == 'ltc' or coin == 'LTC' or coin == "Ltc":
@@ -205,9 +200,8 @@ async def bal(ctx,coin):
         embed.add_field(name=f"{ltc_emoji}LTC", value=ltcvalue)
         embed.add_field(name=f"{usd_emoji}Value", value=f"${finalp}", inline=True)
         embed.add_field(name=f"{usdt_emoji}LTC Price", value=f"${usd_rate}", inline=True)
- 
-    elif coin == 'btc' or coin =='BTC' or coin == 'Btc':
 
+    elif coin == 'btc' or coin =='BTC' or coin == 'Btc':
         current_balance = fetch_btc_bal()
         usd_rate = btcprice()
         btcvalue = current_balance * 0.00000001
@@ -252,6 +246,7 @@ async def bal(ctx,coin):
         embed.add_field(name=f"{usdt_emoji}LTC Price", value=f"${usd_ltc_rate}", inline=True)
 
     await ctx.send(embed=embed)
+
 @client.command()
 async def price(ctx):
         btc_emoji = discord.utils.get(client.emojis, name='BTC')
@@ -262,7 +257,6 @@ async def price(ctx):
         embed.add_field(name=f"{btc_emoji}BTC", value=f"${btcprice()}" )
         embed.add_field(name= f"{ltc_emoji}LTC", value = f"${ltcprice()}"  , inline=True )
         await ctx.send(embed=embed)
-
 
 async def send_notification(message):
     channel = client.get_channel(channel_id)
@@ -280,6 +274,5 @@ async def on_ready():
     check_btc_trnscs.start()
     check_ltc_trnscs.start()
     update_status.start()
-    
- 
+
 client.run(token)
