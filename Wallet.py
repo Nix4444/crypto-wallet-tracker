@@ -3,22 +3,29 @@ import requests
 import json
 from discord.ext import commands, tasks
 
+with open('settings.txt', 'r') as file:
+    lines = file.readlines()
+    settings = {line.split('=')[0]: line.split('=')[1].strip() for line in lines}
+
+
 intents = discord.Intents.all()
 client = commands.Bot(command_prefix='.', intents=intents)
-channel_id=1087340845700763712
-btc_wallet = 'bc1q96y38ev7uvhmrvapgnl9q95gfr99nnxyldeglg'
-token = 'MTA4NzMzNTMwODIxNzAyNDUzMw.G06GkU.-thUHr12PbYJMNUH2EDEdR2JkMV9Q8Z7M2pp8Q'
+
+cryptocompare_apikey = settings['cryptocompare_apikey']
+btc_wallet = settings['btc_wallet']
+ltc_wallet = settings['ltc_wallet']
+token = settings['token']
+channel_id = settings['channel_id']
+
 api=f"https://blockchain.info/rawaddr/{btc_wallet}"
 btcaddy_info_api=f"https://api.blockcypher.com/v1/btc/main/addrs/{btc_wallet}"
-btc_price_api='https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD&api_key={addc799de5b1c06c6adb4381396de5d8711002a807a5521c1f85ffabe5ce146b}'
-api_token='d0c92a0487f24892a58054c8954d675e'
+btc_price_api='https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD&api_key={cryptocompare_apikey}'
 test = f"https://blockstream.info/api/address/{btc_wallet}/txs"
 
-#LTC APIs---
-ltc_wallet='LM9PY3LdkE8Mmmu4SJL5t75yxp89z4qt9u'
+#LTC endpoints---
 ltc_txhistory_api = f"https://chainz.cryptoid.info/ltc/api.dws?key=1cb5722c643e&q=multiaddr&active={ltc_wallet}"
 ltchashinfo_api = "https://chainz.cryptoid.info/ltc/api.dws?q=txinfo&t="
-ltc_price_api ="https://min-api.cryptocompare.com/data/price?fsym=LTC&tsyms=USD&api_key={addc799de5b1c06c6adb4381396de5d8711002a807a5521c1f85ffabe5ce146b}"
+ltc_price_api ="https://min-api.cryptocompare.com/data/price?fsym=LTC&tsyms=USD&api_key={cryptocompare_apikey}"
 
 
 def fetch_btc_bal():
@@ -269,9 +276,10 @@ async def update_status():
 
 @client.event
 async def on_ready():
-    print("I'm Up.")
+    print("Bot is polling...")
     check_btc_trnscs.start()
     check_ltc_trnscs.start()
     update_status.start()
+    
  
 client.run(token)
