@@ -23,10 +23,11 @@ To run the bot, you'll need to have Python 3.6 or later installed on your system
 You'll also need to get an API key, get the free key from here: [Crypto Compare URL](https://min-api.cryptocompare.com/)
 
 ## Installation
-1.Clone this repo: ``https://github.com/Nix4444/crypto-wallet-tracker``
-2.Install the requirements: ``pip install -r requirements.txt``
-3.Run ``setup.bat`` To setup API Key, Discord Bot token, Crypto Wallet Addresses
-4.Start The Bot ``python Wallet.py``
+1. Clone this repo: ``https://github.com/Nix4444/crypto-wallet-tracker``
+2. Install the requirements: ``pip install -r requirements.txt``
+3. Run ``setup.bat`` To setup API Key, Discord Bot token, Crypto Wallet Addresses
+4. Start The Bot ``python Wallet.py``
+
 -> Optional: Also add BTC, LTC, USDT symbols as emojis to your server, and name them BTC, LTC, USDT respectively. The Embed might display it as "None" if not done. They are uploaded in ``icons`` folder.
 
 
