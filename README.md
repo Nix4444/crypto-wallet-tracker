@@ -1,8 +1,16 @@
 # Crypto Wallet Tracker 
-![discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)![python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)<br>
-![btc](https://img.shields.io/badge/Bitcoin-000000?style=for-the-badge&logo=bitcoin&logoColor=orange)![ltc](https://img.shields.io/badge/Litecoin-A6A9AA?style=for-the-badge&logo=Litecoin&logoColor=white)<br>
-![GitHub last commit](https://img.shields.io/github/last-commit/Nix4444/crypto-wallet-tracker) ![GitHub issues](https://img.shields.io/github/issues-raw/Nix4444/crypto-wallet-tracker) 
-
+<div align="center">
+  <img src="https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white">
+</div>
+<div align="center">
+  <img src="https://img.shields.io/badge/Bitcoin-000000?style=for-the-badge&logo=bitcoin&logoColor=orange">
+  <img src="https://img.shields.io/badge/Litecoin-A6A9AA?style=for-the-badge&logo=Litecoin&logoColor=white">
+</div>
+<div align="center">
+  <img src="https://img.shields.io/github/last-commit/Nix4444/crypto-wallet-tracker">
+  <img src="https://img.shields.io/github/issues-raw/Nix4444/crypto-wallet-tracker">
+</div>
 
 The Crypto Wallet Transactions Tracker Bot is a Simple Discord bot designed to monitor and notify users of transaction activities across multiple cryptocurrency wallets. 
 Leveraging real-time data from blockchain explorers, this bot provides immediate updates on Bitcoin and Litecoin transactions, ensuring that you stay informed of all activity within your crypto wallets. Whether you're tracking personal finances or managing a portfolio of crypto assets, this bot acts as your vigilant assistant, delivering crucial transaction information directly to your Discord server.
